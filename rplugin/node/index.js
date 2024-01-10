@@ -65,6 +65,9 @@ module.exports = (plugin) => {
     wss.on("connection", function (ws) {
       plugin.nvim.outWrite(`connected! \n`);
       wsarray.push(ws);
+      if (graphdata) {
+        updateGraphData();
+      }
     });
   }
 
