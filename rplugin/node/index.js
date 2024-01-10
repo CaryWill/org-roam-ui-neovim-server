@@ -15,19 +15,18 @@ let graphdata = null;
 
 const processGraphData = (_graphdata) => {
   try {
-    plugin.nvim.outWrite(`123! \n`);
-    // const data = JSON.parse(_graphdata);
+    const data = JSON.parse(_graphdata);
     const nodes = [];
     const links = [];
     const tags = [];
     // plugin.nvim.outWrite(`${_graphdata}! \n`);
-    return;
     // TODO: try catch
-    data[0].forEach((file) => {
+    data.forEach((file) => {
       const { file_id: id, file_path } = file;
       nodes.push({
         id,
         file: file_path,
+        // TODO: fix comment
         // TODO: file name not stored in db
         title: file_path,
         level: 0,
@@ -36,45 +35,51 @@ const processGraphData = (_graphdata) => {
         tags: [],
         olp: null,
       });
-      // const backlinks = JSON.parse(file.links);
-      // backlinks.forEach((link) => {
-      //   links.push({
-      //     source: link.file_id,
-      //     target: link.id,
-      //     type: "bad",
-      //   });
-      // });
+      const backlinks = JSON.parse(file.id_links);
+      backlinks.forEach((link) => {
+        links.push({
+          source: link.file_id,
+          target: link.id,
+          type: "bad",
+        });
+      });
     });
     return { nodes, links, tags };
   } catch (err) {
     plugin.nvim.outWrite(`${err.message}! \n`);
+    return { nodes: [], links: [], tags: [] };
   }
 };
 
 module.exports = (plugin) => {
   function init() {
-    plugin.nvim.outWrite("inited! \n");
+    plugin.nvim.outWrite("inited!! \n");
     wss = new WebSocketServer({
       port: port1,
     });
+
+    // plugin.nvim.outWrite(` \n`);
 
     wss.on("connection", function (ws) {
       plugin.nvim.outWrite("Dayman (ah-ah-ah) 2\n");
       wsarray.push(ws);
       return;
-      if (!graphdata) return;
-      const { nodes, links, tags } = processGraphData(graphdata);
-      plugin.nvim.outWrite("connected! \n");
-      ws.send(
-        JSON.stringify({
-          type: "graphdata",
-          data: {
-            nodes,
-            links,
-            tags,
-          },
-        }),
-      );
+      if (!graphdata) {
+        plugin.nvim.outWrite(`no graphdata \n`);
+      } else {
+        const { nodes, links, tags } = processGraphData(graphdata);
+        plugin.nvim.outWrite("data parsed successfully! \n");
+        ws.send(
+          JSON.stringify({
+            type: "graphdata",
+            data: {
+              nodes,
+              links,
+              tags,
+            },
+          }),
+        );
+      }
     });
   }
 
@@ -82,11 +87,16 @@ module.exports = (plugin) => {
     plugin.nvim.outWrite("updateGraphData! \n");
     // TODO: wsarray 替换成 wss.clients?
     // 需要一个办法获取所有链接的 clients
-    wsarray.forEach((ws) => {
+    wsarray.forEach((ws, index) => {
+      plugin.nvim.outWrite(
+        `ws ${index}: updateGraphData! with ${graphdata} \n`,
+      );
       // since lua only have table data structure
       // so, {} will be convert to [{}]
       const { nodes, links, tags } = processGraphData(graphdata);
-      plugin.nvim.outWrite(`updateGraphData! with ${graphdata} \n`);
+      // const data = processGraphData(graphdata);
+      plugin.nvim.outWrite(`${ws} updateGraphData! with ${graphdata} 123\n`);
+      // TODO: 需要找一个高效率的调试方式
       ws.send(
         JSON.stringify({
           type: "graphdata",
@@ -99,15 +109,6 @@ module.exports = (plugin) => {
       );
     });
   };
-
-  plugin.registerFunction(
-    "InitWs",
-    (data) => {
-      init();
-      return Promise(true);
-    },
-    { sync: false },
-  );
 
   // then it can be call in neovim with
   // lua vim.fn.SetLines
