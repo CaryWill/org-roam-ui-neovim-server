@@ -8,6 +8,8 @@ const port2 = 35901;
 // 引用Server类:
 const WebSocketServer = WebSocket.Server;
 
+const orgRoamGraphData = require('./mockdata')
+
 module.exports = (plugin) => {
   function setLine() {
     // 实例化:
@@ -17,12 +19,18 @@ module.exports = (plugin) => {
 
     wss.on("connection", function (ws) {
       setTimeout(() => {
-        ws.send(`this is from nodejs`, (err) => {
-          if (err) {
-            console.log(`[SERVER] error: ${err}`);
-          }
-        });
-      }, 8000);
+        ws.send(
+          JSON.stringify({
+            type: "graphdata",
+            data: orgRoamGraphData,
+          }),
+          (err) => {
+            if (err) {
+              console.log(`[SERVER] error: ${err}`);
+            }
+          },
+        );
+      }, 1000);
 
       console.log(`[SERVER] connection()`);
       ws.on("message", function (message) {
