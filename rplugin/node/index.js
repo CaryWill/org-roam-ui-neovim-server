@@ -1,13 +1,8 @@
 const WebSocket = require("ws");
 
-// ws server
-const port1 = 35903;
-// http server api
-const port2 = 35901;
-
+const wsPort = 35903;
+const httpPort = 35901;
 const WebSocketServer = WebSocket.Server;
-
-// const orgRoamGraphData = require("./mockdata");
 
 let wss = null;
 let wsarray = [];
@@ -19,16 +14,18 @@ const processGraphData = (_graphdata) => {
     const nodes = [];
     const links = [];
     const tags = [];
-    // plugin.nvim.outWrite(`${_graphdata}! \n`);
-    // TODO: try catch
     data.forEach((file) => {
       const { file_id: id, file_path } = file;
       nodes.push({
         id,
         file: file_path,
-        // TODO: fix comment
+        // TODO: fix comment single comment
         // TODO: file name not stored in db
-        title: file_path,
+        // use last path component for now
+        // then fix the dev env and refactor code
+        title: file_path
+          .split("/")
+          [file_path.split("/").length - 1].split(".")[0],
         level: 0,
         pos: 0,
         properties: {},
@@ -46,6 +43,10 @@ const processGraphData = (_graphdata) => {
     });
     return { nodes, links, tags };
   } catch (err) {
+    // TODO: how to properly debug by logging
+    // it looks like I can't use console.log
+    // because it throw errors
+    // https://github.com/neovim/node-client/issues/202
     plugin.nvim.outWrite(`${err.message}! \n`);
     return { nodes: [], links: [], tags: [] };
   }
@@ -53,49 +54,24 @@ const processGraphData = (_graphdata) => {
 
 module.exports = (plugin) => {
   function init() {
-    plugin.nvim.outWrite("inited!! \n");
+    plugin.nvim.outWrite(`connecting... \n`);
     wss = new WebSocketServer({
-      port: port1,
+      port: wsPort,
     });
 
-    // plugin.nvim.outWrite(` \n`);
-
+    // TODO: remove from array when disconnect
+    // or I can find a way to use wss object
+    // to get all clients
     wss.on("connection", function (ws) {
-      plugin.nvim.outWrite("Dayman (ah-ah-ah) 2\n");
+      plugin.nvim.outWrite(`connected! \n`);
       wsarray.push(ws);
-      return;
-      if (!graphdata) {
-        plugin.nvim.outWrite(`no graphdata \n`);
-      } else {
-        const { nodes, links, tags } = processGraphData(graphdata);
-        plugin.nvim.outWrite("data parsed successfully! \n");
-        ws.send(
-          JSON.stringify({
-            type: "graphdata",
-            data: {
-              nodes,
-              links,
-              tags,
-            },
-          }),
-        );
-      }
     });
   }
 
   const updateGraphData = () => {
     plugin.nvim.outWrite("updateGraphData! \n");
-    // TODO: wsarray 替换成 wss.clients?
-    // 需要一个办法获取所有链接的 clients
-    wsarray.forEach((ws, index) => {
-      plugin.nvim.outWrite(
-        `ws ${index}: updateGraphData! with ${graphdata} \n`,
-      );
-      // since lua only have table data structure
-      // so, {} will be convert to [{}]
+    wsarray.forEach((ws) => {
       const { nodes, links, tags } = processGraphData(graphdata);
-      // const data = processGraphData(graphdata);
-      plugin.nvim.outWrite(`${ws} updateGraphData! with ${graphdata} 123\n`);
       // TODO: 需要找一个高效率的调试方式
       ws.send(
         JSON.stringify({
@@ -110,7 +86,6 @@ module.exports = (plugin) => {
     });
   };
 
-  // then it can be call in neovim with
   // lua vim.fn.SetLines
   // you need to call :UpdateRemotePlugins
   // everytime you made change, [[https://github.com/neovim/node-client/issues/204#issuecomment-1575338830][this is the article]]
@@ -119,36 +94,12 @@ module.exports = (plugin) => {
     (data) => {
       graphdata = data;
       updateGraphData();
-      // works like console.log
-      // plugin.nvim.outWrite('Dayman (ah-ah-ah) \n')
-      // https://github.com/neovim/node-client/issues/202
-
-      // plugin.nvim.outWrite(`${data} \n`)
-      // TODO: seems like open localtion list will not triiger it?
-      return Promise(true);
-    },
-    { sync: false },
-  );
-
-  // For test
-  plugin.registerFunction(
-    "CTest",
-    (data) => {
-      plugin.nvim.outWrite(`${wsarray.length || "getwss"}${graphdata} \n`);
       return Promise(true);
     },
     { sync: false },
   );
 
   plugin.registerCommand("InitWs", [plugin.nvim.buffer, init]);
-
-  // plugin.registerAutocmd(
-  //   "BufEnter",
-  //   async (fileName) => {
-  //     init()
-  //   },
-  //   { sync: false, pattern: "*.org" },
-  // );
 
   // it seems like if i add dev:true, it will reload actually
   // from here [[https://github.com/neovim/node-client?tab=readme-ov-file#api]]
