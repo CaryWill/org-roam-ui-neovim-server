@@ -16,4 +16,5 @@
    - [ ] doc, like recommand plugin keymapping to init ws
    - [ ] move org-roam-ui-server nodejs neovim plugin to org-roam-ui repo
    - [X] file change watch and update org-roam-ui
+   - [ ] how to open org-roam-ui effectively, write a vim command
 
