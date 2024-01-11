@@ -1,0 +1,13 @@
+** Related Repos
+
+1. org-roam-ui-neovim-server
+2. org-roam-ui
+3. org-roam
+4. dotfile plugin path
+
+** TODO Supported features
+   - [X] org-roam-ui ws support and when connected the graph view will be inited.
+   - [ ] Http server to view file content
+   - [ ] doc, like recommand plugin keymapping to init ws
+   - [ ] move org-roam-ui-server nodejs neovim plugin to org-roam-ui repo
+
