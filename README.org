@@ -11,7 +11,7 @@
 
 ** TODO Supported features
    - [X] org-roam-ui ws support and when connected the graph view will be inited.
-   - [ ] Http server to view file content
+   - [X] Http server to view file content
    - [ ] doc, like recommand plugin keymapping to init ws
    - [ ] move org-roam-ui-server nodejs neovim plugin to org-roam-ui repo
    - [X] file change watch and update org-roam-ui
