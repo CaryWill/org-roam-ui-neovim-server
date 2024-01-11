@@ -1,7 +1,7 @@
 const WebSocket = require("ws");
 const fs = require("fs");
 const express = require("express");
-const cors = require("cors")
+const cors = require("cors");
 
 const wsPort = 35903;
 const httpPort = 35901;
@@ -132,9 +132,29 @@ module.exports = (plugin) => {
       // Extract the 'id' from the request parameters
       const id = req.params.id;
       const { nodes } = processGraphData(graphdata);
-      const node = nodes.find(node => node.id === id)
-      const fileContent = fs.readFileSync(`${node.file}`, 'utf8');
-      res.send(fileContent);
+      const node = nodes.find((node) => node.id === id);
+      try {
+        // Synchronously read the contents of the file
+        // Output the file contents
+        const fileContent = fs.readFileSync(`${node.file}`, "utf8");
+        res.send(fileContent);
+      } catch (err) {}
+    });
+
+    app.get("/img/:filePath", (req, res) => {
+      // I dont know why it get encode twice
+      const filePath = decodeURIComponent(
+        decodeURIComponent(req.params.filePath),
+      );
+      plugin.nvim.outWrite(`${filePath} \n`);
+
+      // Send the file to the client
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          // Handle the error, for example send a 404 if file not found
+          res.status(err.status).end();
+        }
+      });
     });
 
     app.listen(httpPort, () => {});
