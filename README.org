@@ -18,3 +18,5 @@
    - [X] file change watch and update org-roam-ui
    - [ ] how to open org-roam-ui effectively, write a vim command
 
+** BUG
+   - [ ] I found some notes are not shown, like W54, maybe it is not created with org roam, thus no org id property?
