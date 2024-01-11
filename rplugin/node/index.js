@@ -107,7 +107,6 @@ module.exports = (plugin) => {
     plugin.nvim.lua("return vim.g.org_roam_config").then((data) => {
       orgRoamConfig = data;
       if (orgRoamConfig) {
-        plugin.nvim.outWrite(`${orgRoamConfig.org_roam_directory} \n`);
         const folder = `${orgRoamConfig.org_roam_directory}`;
         const watcher = fs.watch(folder, (eventType, filename) => {
           debouncedCallback(() => {
