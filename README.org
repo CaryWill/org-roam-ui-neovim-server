@@ -1,4 +1,5 @@
 ** Usage
+   0. =npm install -g neovim=
    1. Start org-roam-ui project first.
    2. Connect Websocket. Run =:InitWs= in vim command line.
 
