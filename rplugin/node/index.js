@@ -1,5 +1,7 @@
 const WebSocket = require("ws");
 const fs = require("fs");
+const express = require("express");
+const cors = require("cors")
 
 const wsPort = 35903;
 const httpPort = 35901;
@@ -120,6 +122,22 @@ module.exports = (plugin) => {
       // TODO: to close watcher use `watcher.close()`
       return Promise(true);
     });
+
+    // http server format
+    // http://localhost:35901/node/${id}
+    const app = express();
+    app.use(cors());
+
+    app.get("/node/:id", (req, res) => {
+      // Extract the 'id' from the request parameters
+      const id = req.params.id;
+
+      // Use the 'id' in your response or processing logic
+      res.send(`You requested the node with ID: ${id}`);
+    });
+
+    app.listen(httpPort, () => {});
+    // http server end
   }
 
   const updateGraphData = () => {
