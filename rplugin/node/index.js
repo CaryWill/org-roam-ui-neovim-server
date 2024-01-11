@@ -131,9 +131,10 @@ module.exports = (plugin) => {
     app.get("/node/:id", (req, res) => {
       // Extract the 'id' from the request parameters
       const id = req.params.id;
-
-      // Use the 'id' in your response or processing logic
-      res.send(`You requested the node with ID: ${id}`);
+      const { nodes } = processGraphData(graphdata);
+      const node = nodes.find(node => node.id === id)
+      const fileContent = fs.readFileSync(`${node.file}`, 'utf8');
+      res.send(fileContent);
     });
 
     app.listen(httpPort, () => {});
