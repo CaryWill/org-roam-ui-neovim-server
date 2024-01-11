@@ -1,4 +1,5 @@
 const WebSocket = require("ws");
+const fs = require("fs");
 
 const wsPort = 35903;
 const httpPort = 35901;
@@ -7,6 +8,20 @@ const WebSocketServer = WebSocket.Server;
 let wss = null;
 let wsarray = [];
 let graphdata = null;
+let orgRoamConfig = null;
+let count = 0;
+
+let timeout;
+let delay = 200;
+function debounce(fn, delay) {
+  return function () {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn.apply(this, arguments), delay);
+  };
+}
+const debouncedCallback = debounce((callback) => {
+  callback();
+}, delay);
 
 const processGraphData = (_graphdata) => {
   try {
@@ -75,7 +90,35 @@ module.exports = (plugin) => {
     wss.on("connection", function (ws) {
       plugin.nvim.outWrite(`connected! \n`);
       wsarray.push(ws);
-      getGraphData()
+      getGraphData();
+    });
+
+    // TODO: add ping pong mechanism
+    // like close watcher
+    wss.on("error", function close() {
+      plugin.nvim.outWrite(`connection error! \n`);
+    });
+    wss.on("close", function close() {
+      plugin.nvim.outWrite(`connection closed! \n`);
+    });
+
+    plugin.nvim.lua("return vim.g.org_roam_config").then((data) => {
+      orgRoamConfig = data;
+      if (orgRoamConfig) {
+        plugin.nvim.outWrite(`${orgRoamConfig.org_roam_directory} \n`);
+        const folder = `${orgRoamConfig.org_roam_directory}`;
+        const watcher = fs.watch(folder, (eventType, filename) => {
+          debouncedCallback(() => {
+            count = count + 1;
+            plugin.nvim.outWrite(`${count} \n`);
+            getGraphData();
+          });
+        });
+      }
+      // I guess put it in ws disconnect callback would be appropriate
+      // https://stackoverflow.com/a/53983383
+      // TODO: to close watcher use `watcher.close()`
+      return Promise(true);
     });
   }
 

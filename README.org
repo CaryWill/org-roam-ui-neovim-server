@@ -10,4 +10,5 @@
    - [ ] Http server to view file content
    - [ ] doc, like recommand plugin keymapping to init ws
    - [ ] move org-roam-ui-server nodejs neovim plugin to org-roam-ui repo
+   - [ ] file change watch and update org-roam-ui
 
