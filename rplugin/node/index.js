@@ -53,6 +53,16 @@ const processGraphData = (_graphdata) => {
 };
 
 module.exports = (plugin) => {
+  const getGraphData = () => {
+    // TODO: I only know this way to get the data in other neovim plugin
+    // in org-roam plugin which defined global GetLatestGraphData function
+    plugin.nvim.lua("return GetLatestGraphData()").then((data) => {
+      graphdata = data;
+      updateGraphData();
+      return Promise(true);
+    });
+  };
+
   function init() {
     plugin.nvim.outWrite(`connecting... \n`);
     wss = new WebSocketServer({
@@ -65,9 +75,7 @@ module.exports = (plugin) => {
     wss.on("connection", function (ws) {
       plugin.nvim.outWrite(`connected! \n`);
       wsarray.push(ws);
-      if (graphdata) {
-        updateGraphData();
-      }
+      getGraphData()
     });
   }
 
@@ -103,6 +111,10 @@ module.exports = (plugin) => {
   );
 
   plugin.registerCommand("InitWs", [plugin.nvim.buffer, init]);
+  plugin.registerCommand("GetLatestGraphData", [
+    plugin.nvim.buffer,
+    getGraphData,
+  ]);
 
   // it seems like if i add dev:true, it will reload actually
   // from here [[https://github.com/neovim/node-client?tab=readme-ov-file#api]]
